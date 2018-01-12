@@ -1,0 +1,197 @@
+<html ng-app="ionicApp">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Ionic List Directive</title>
+
+    <link href="https://cdn.bootcss.com/ionic/1.3.2/css/ionic.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/ionic/1.3.2/js/ionic.bundle.min.js"></script>
+    <style>
+        .delete-item {
+            transition: all 0.5s ease-in;
+        }
+        
+        .delete-btn {
+            background: red;
+            height: 100%;
+            width: 75px;
+            color: #fff;
+            font-size: 12px;
+            margin-right: -75px;
+            /* float: right; */
+        }
+    </style>
+    <script>
+        angular.module('ionicApp', ['ionic'])
+
+        .controller('MyCtrl', function($scope) {
+
+            $scope.data = {
+                showDelete: false
+            };
+
+            $scope.edit = function(item) {
+                alert('Edit Item: ' + item.id);
+            };
+            $scope.share = function(item) {
+                alert('Share Item: ' + item.id);
+            };
+
+            $scope.moveItem = function(item, fromIndex, toIndex) {
+                $scope.items.splice(fromIndex, 1);
+                $scope.items.splice(toIndex, 0, item);
+            };
+
+            $scope.onItemDelete = function(item) {
+                $scope.items.splice($scope.items.indexOf(item), 1);
+            };
+
+            $scope.items = [{
+                id: 0
+            }, {
+                id: 1
+            }, {
+                id: 2
+            }, {
+                id: 3
+            }, {
+                id: 4
+            }, {
+                id: 5
+            }, {
+                id: 6
+            }, {
+                id: 7
+            }, {
+                id: 8
+            }, {
+                id: 9
+            }, {
+                id: 10
+            }];
+
+        });
+        angular.module('ionicApp').directive('deleteItem', [function() {
+            return {
+                scope: {
+                    stepLength: '='
+                },
+                restrict: 'EA',
+                template: function(el, atrr) {
+                    var html = '<div class="delete-item">' +
+                        el[0].innerHTML +
+                        '<a class="delete-btn">删除</a></div>';
+                    return html;
+                },
+                replace: true,
+                link: function(scope, element, attrs) {
+                    // element = `<div></div>`;
+                    // element.wap
+                    var el = element[0];
+                    // var html = el.innerHTML;
+                    // angular.element(el).wrap('<div class="delete"></div>');
+
+                    var touch = {
+                        distance: 10, //滑动距离，超过该距离触发swipe事件，单位像素。
+                        duration: 1000 //滑动时长，超过该时间不触发swipe，单位毫秒。
+                    };
+                    var startPoint = {
+                            x: 0,
+                            y: 0
+                        },
+                        endPoint = {
+                            x: 0,
+                            y: 0
+                        };
+                    el.addEventListener('touchstart', function(e) {
+                        var touchPoint = event.touches[0];
+                        startPoint = {
+                            x: Math.floor(touchPoint.clientX),
+                            y: Math.floor(touchPoint.clientY)
+                        };
+                    });
+                    el.addEventListener('touchmove', function(e) {
+                        var touchPoint = event.touches[0];
+                        endPoint = {
+                            x: Math.floor(touchPoint.clientX),
+                            y: Math.floor(touchPoint.clientY)
+                        };
+                        var distance = endPoint.x - startPoint.x;
+                        if (Math.abs(distance) < touch.distance) {
+                            return;
+                        }
+                        if (Math.abs(distance) < scope.stepLength && distance < 0) {
+                            element[0].style = 'transform: translate3d(' + distance + 'px, 0px, 0px)';
+                            // if (endPoint.x < startPoint.x) {} else if (endPoint.x > startPoint.x) {
+                            //     element[0].style = 'transform: translate3d(' + distance + 'px, 0px, 0px)';
+
+                            // }
+                        }
+                        if (Math.abs(distance) < scope.stepLength && distance > 0) {
+                            element[0].style = 'transform: translate3d(' + startPoint.x - endPoint.x + 'px, 0px, 0px)';
+                        }
+                    });
+                    el.addEventListener('touchend', function(e) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                    });
+                }
+            }
+        }]);
+    </script>
+    <style>
+        body {
+            cursor: url('http://www.runoob.com/try/demo_source/finger.png'), auto;
+        }
+    </style>
+</head>
+
+<body ng-controller="MyCtrl">
+
+    <ion-header-bar class="bar-positive">
+        <div class="buttons">
+            <button class="button button-icon icon ion-ios-minus-outline" ng-click="data.showDelete = !data.showDelete; data.showReorder = false"></button>
+        </div>
+        <h1 class="title">Ionic Delete/Option Buttons</h1>
+        <div class="buttons">
+            <button class="button" ng-click="data.showDelete = false; data.showReorder = !data.showReorder">
+            Reorder
+        </button>
+        </div>
+    </ion-header-bar>
+
+    <ion-content>
+
+        <!-- The list directive is great, but be sure to also checkout the collection repeat directive when scrolling through large lists -->
+
+        <!-- <ion-list show-delete="data.showDelete" show-reorder="data.showReorder">
+
+            <ion-item ng-repeat="item in items" item="item" href="#/item/{{item.id}}" class="item-remove-animate">
+                Item {{ item.id }}
+                <ion-delete-button class="ion-minus-circled" ng-click="onItemDelete(item)">
+                </ion-delete-button>
+                <ion-option-button class="button-assertive" ng-click="edit(item)">
+                    Edit
+                </ion-option-button>
+                <ion-option-button class="button-calm" ng-click="share(item)">
+                    Share
+                </ion-option-button>
+                <ion-reorder-button class="ion-navicon" on-reorder="moveItem(item, $fromIndex, $toIndex)"></ion-reorder-button>
+            </ion-item>
+
+        </ion-list> -->
+
+        <ul>
+            <li ng-repeat="item in items" class="item">
+                <delete-item step-length=70>
+                    Item {{ item.id }}
+                </delete-item>
+            </li>
+
+        </ul>
+    </ion-content>
+</body>
+
+</html>
